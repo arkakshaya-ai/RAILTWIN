@@ -1,0 +1,5 @@
+fastavro==1.12.2
+confluent-kafka==2.5.3
+sqlalchemy==2.0.35
+psycopg[binary]==3.2.3
+pytest==8.3.3

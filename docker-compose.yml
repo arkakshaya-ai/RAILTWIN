@@ -44,40 +44,51 @@ services:
       timeout: 5s
       retries: 10
 
-  # --- Phase 1: producers & ingestion (uncomment once services/producers is built) ---
-  # train_position_producer:
-  #   build: ./services/producers
-  #   command: python train_position_producer.py
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-  #   env_file: .env
+  # --- Phase 1: producers & ingestion ---
+  # Build context is repo root (not the service subdir) because each Dockerfile
+  # needs schemas/avro and services/producers/reference_data.py alongside its
+  # own service code.
+  train_position_producer:
+    build:
+      context: .
+      dockerfile: services/producers/Dockerfile
+    command: python train_position_producer.py --num-trains 10
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file: .env
 
-  # sensor_producer:
-  #   build: ./services/producers
-  #   command: python sensor_producer.py --fault-rate 0.1
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-  #   env_file: .env
+  sensor_producer:
+    build:
+      context: .
+      dockerfile: services/producers/Dockerfile
+    command: python sensor_producer.py --fault-rate 0.1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file: .env
 
-  # defect_corridor_weather_producers:
-  #   build: ./services/producers
-  #   command: sh -c "python defect_producer.py & python corridor_timetable_producer.py & python weather_producer.py & wait"
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-  #   env_file: .env
+  defect_corridor_weather_producers:
+    build:
+      context: .
+      dockerfile: services/producers/Dockerfile
+    command: sh -c "python defect_producer.py & python corridor_timetable_producer.py & python weather_producer.py & wait"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file: .env
 
-  # udm_writer:
-  #   build: ./services/ingestion
-  #   command: python udm_writer.py
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-  #     postgres:
-  #       condition: service_healthy
-  #   env_file: .env
+  udm_writer:
+    build:
+      context: .
+      dockerfile: services/ingestion/Dockerfile
+    command: python udm_writer.py
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file: .env
 
   # --- Phase 4: API gateway (uncomment once services/planning_api is built) ---
   # planning_api:
