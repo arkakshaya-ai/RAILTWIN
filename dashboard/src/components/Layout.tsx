@@ -35,8 +35,8 @@ const ROUTE_NAV_ITEMS = [
 
 function HealthPill() {
   const { data, loading, error } = useApiPoll(getHealth, POLL_INTERVAL_MS);
-  const ok = !loading && !error && (data?.status === 'ok' || data?.status === 'healthy');
-  const label = loading ? 'Checking…' : error ? 'Health Unreachable' : (data?.status ?? 'Unknown');
+  const ok = !loading && !error && data?.ai_engine === 'up';
+  const label = loading ? 'Checking…' : error ? 'Health Unreachable' : `AI Engine ${data?.ai_engine ?? 'unknown'}`;
   return (
     <div
       className={`hidden md:inline-flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full font-label-mono text-label-mono uppercase tracking-wider ${

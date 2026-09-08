@@ -1,78 +1,125 @@
 /**
- * BUILD_SPEC.md Section 5 documents the route contract (paths + intent) but not
- * exact response schemas, and no backend is reachable from this sandbox to infer
- * them from. Every shape below is intentionally permissive (an index signature
- * alongside the fields we expect) so a real response that differs in shape still
- * renders instead of crashing — components must read fields defensively
- * (`data?.field ?? fallback`) and treat anything missing as "unknown", not fatal.
+ * Mirrors services/planning_api/models.py verbatim (the actual FastAPI
+ * response models, built in parallel against BUILD_SPEC.md Section 5).
+ * Optional fields follow the Pydantic models' own `Optional[...] = None`.
  */
 
-export interface NetworkState {
-  active_trains?: number;
-  total_trains?: number;
-  on_time_percent?: number;
-  active_conflicts?: number;
-  track_km_monitored?: number;
-  timestamp?: string;
+export interface TrainState {
+  train_id: string;
+  section: string;
+  chainage_km: number;
+  speed_kmph: number;
+  direction: string;
+  timestamp: string;
+}
+
+export interface SensorState {
+  sensor_id: string;
+  section: string;
+  chainage_km: number;
+  timestamp: string;
+  sensor_type: 'axle' | 'hotbox';
+  attributes: Record<string, unknown>;
   [key: string]: unknown;
+}
+
+export interface BlockSlot {
+  slot_id: string;
+  section?: string;
+  window_start?: string;
+  window_end?: string;
+  block_type?: string;
+  traffic_density?: number;
+  [key: string]: unknown;
+}
+
+export interface NetworkState {
+  trains: TrainState[];
+  sensors: SensorState[];
+  blocks: BlockSlot[];
 }
 
 export interface Conflict {
   id: string;
-  severity?: string;
-  description?: string;
-  location?: string;
-  detected_at?: string;
-  [key: string]: unknown;
+  section: string;
+  eta: string;
+  severity: string;
 }
 
 export interface ConflictOption {
-  id: string;
-  description?: string;
-  score?: number;
+  action: string;
+  score: number;
+  rationale: string;
+  constraints_checked: string[];
   [key: string]: unknown;
+}
+
+export interface ConflictOptionsResult {
+  options: ConflictOption[];
+  rejected: Record<string, unknown>[];
+  proven_optimal?: boolean | null;
+  fail_safe?: boolean | null;
 }
 
 export interface ResolveConflictPayload {
-  option_id: string;
-  [key: string]: unknown;
+  option: Record<string, unknown>;
+  edits?: Record<string, unknown>;
+  controller_action?: string;
+  realized_outcome?: string;
 }
 
 export interface ResolveConflictResult {
-  status?: string;
-  [key: string]: unknown;
+  status: string;
+  recommendation_id: string;
 }
 
 export interface Defect {
-  id: string;
-  severity?: string;
-  asset_id?: string;
-  description?: string;
-  detected_at?: string;
-  [key: string]: unknown;
+  defect_id: string;
+  priority_score: number;
+  top_features: Record<string, unknown>[];
+  escalation_risk?: number;
 }
 
-export interface BlockPlan {
-  id?: string;
-  blocks?: unknown[];
-  [key: string]: unknown;
+export interface BlockPlanSlot {
+  slot_id: string;
+  section?: string;
+  window_start?: string;
+  window_end?: string;
+  departments: string[];
+  task_ids: string[];
+}
+
+export interface WeeklyBlockPlan {
+  plan_id: string;
+  slots: BlockPlanSlot[];
+  source: 'db' | 'fallback_solve';
+}
+
+export interface BlockPlanSection {
+  section: string;
+  departments: string[];
+  task_ids: string[];
+  slot_ids: string[];
+}
+
+export interface MonthlyBlockPlan {
+  plan_id: string;
+  sections: BlockPlanSection[];
+  source: 'db' | 'fallback_solve';
 }
 
 export interface EmergencyTriggerPayload {
-  type: string;
-  location?: string;
-  [key: string]: unknown;
+  section?: string;
+  asset_id?: string;
+  reason?: string;
 }
 
 export interface EmergencyTriggerResult {
-  status?: string;
-  incident_id?: string;
-  [key: string]: unknown;
+  status: string;
+  reoptimization_id: string;
 }
 
 export interface HealthStatus {
-  status?: string;
-  latency_ms?: number;
-  version?: string;
-  [key: string]: unknown;
+  ai_engine: 'up' | 'down';
+  last_heartbeat?: string;
 }

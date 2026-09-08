@@ -22,6 +22,7 @@ from contextlib import asynccontextmanager
 
 from apscheduler.triggers.interval import IntervalTrigger
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from services.planning_api import health as health_module
 from services.planning_api.demo_data import SEED_DEMO_DATA, seed_demo_digital_twin_state
@@ -72,6 +73,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Train Traffic & Block Planning API", lifespan=lifespan)
+
+# dashboard/ (Vite dev server on :5173) calls this API directly from the
+# browser, so it needs CORS enabled or every fetch is silently blocked.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(network.router, prefix="/api/v1", tags=["network"])
 app.include_router(conflicts.router, prefix="/api/v1", tags=["conflicts"])
