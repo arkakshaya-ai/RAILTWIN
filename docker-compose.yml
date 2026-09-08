@@ -90,17 +90,19 @@ services:
         condition: service_healthy
     env_file: .env
 
-  # --- Phase 4: API gateway (uncomment once services/planning_api is built) ---
-  # planning_api:
-  #   build: ./services/planning_api
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-  #     postgres:
-  #       condition: service_healthy
-  #   env_file: .env
+  # --- Phase 4: API gateway ---
+  planning_api:
+    build:
+      context: .
+      dockerfile: services/planning_api/Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file: .env
 
   # --- Phase 5: frontend (uncomment once dashboard is built) ---
   # dashboard:

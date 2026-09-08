@@ -16,15 +16,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from sqlalchemy import (
     Column,
+    Connection,
     Date,
     Engine,
+    JSON,
     MetaData,
     Numeric,
     String,
     Table,
     Text,
     create_engine,
+    select,
 )
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from services.digital_twin.api import DigitalTwinApi, digital_twin_api
@@ -80,6 +84,51 @@ corridor_block_slot_table = Table(
     Column("block_type", String),
     Column("traffic_density", Numeric),
 )
+
+# Phase 4 additions. `.with_variant(...)` lets the same Core table compile
+# against both the real Postgres schema (schemas/sql/udm_schema.sql's
+# TEXT[]/JSONB columns) and an in-memory SQLite engine (`metadata.create_all`
+# is exercised in tests, and plain SQLite has no array/JSONB type) without
+# maintaining two separate table definitions.
+block_plan_table = Table(
+    "block_plan",
+    metadata,
+    Column("plan_id", String, primary_key=True),
+    Column("horizon", String, nullable=False),
+    Column("slot_id", String),
+    Column("departments", ARRAY(String).with_variant(JSON(), "sqlite"), nullable=False),
+    Column("task_ids", ARRAY(String).with_variant(JSON(), "sqlite"), nullable=False),
+    Column("generated_at", Text),
+)
+
+recommendation_log_table = Table(
+    "recommendation_log",
+    metadata,
+    Column("recommendation_id", String, primary_key=True),
+    Column("conflict_id", String),
+    Column("options_json", JSON().with_variant(JSONB(), "postgresql"), nullable=False),
+    Column("scores_json", JSON().with_variant(JSONB(), "postgresql"), nullable=False),
+    Column("controller_action", String),
+    Column("realized_outcome", String),
+    Column("created_at", Text),
+)
+
+
+def portable_upsert(conn: Connection, table: Table, row: dict, pk_column: str) -> None:
+    """Insert-or-update that works on both SQLite and Postgres.
+
+    `pg_insert(...).on_conflict_do_update` (used by `UdmWriter` above) is
+    Postgres-only and breaks `metadata.create_all`/write tests run against an
+    in-memory SQLite engine, so Phase 4's own writers (block_plan,
+    recommendation_log) go through this plain select-then-insert-or-update
+    instead.
+    """
+    pk = table.c[pk_column]
+    exists = conn.execute(select(pk).where(pk == row[pk_column])).first()
+    if exists is not None:
+        conn.execute(table.update().where(pk == row[pk_column]).values(**row))
+    else:
+        conn.execute(table.insert().values(**row))
 
 
 def asset_row_for(asset_id: str) -> dict:
