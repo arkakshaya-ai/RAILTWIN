@@ -66,6 +66,8 @@ defect_task_table = Table(
     Column("reported_date", Date),
     Column("due_date", Date),
     Column("department_owner", String),
+    Column("priority_score", Numeric),
+    Column("escalation_risk", Numeric),
 )
 
 corridor_block_slot_table = Table(

@@ -1,0 +1,28 @@
+{
+  "feature_names": [
+    "severity",
+    "days_overdue",
+    "category_encoded",
+    "department_owner_encoded",
+    "historical_escalation_count"
+  ],
+  "categories": [
+    "ballast_wear",
+    "cable_fault",
+    "feeder_fault",
+    "gauge_deviation",
+    "insulator_damage",
+    "interlocking_fault",
+    "ohe_sag",
+    "point_failure",
+    "rail_crack",
+    "signal_fault",
+    "traction_motor_fault",
+    "weld_defect"
+  ],
+  "departments": [
+    "Engineering",
+    "S&T",
+    "TRD"
+  ]
+}
