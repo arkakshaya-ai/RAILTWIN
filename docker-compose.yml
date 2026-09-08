@@ -1,0 +1,103 @@
+version: "3.9"
+
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: traintwin-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: "traintwin-dev-cluster-1"
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  postgres:
+    image: postgres:15
+    container_name: traintwin-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: traindb
+      POSTGRES_PASSWORD: traindb
+      POSTGRES_DB: traindb
+    volumes:
+      - ./schemas/sql:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U traindb -d traindb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # --- Phase 1: producers & ingestion (uncomment once services/producers is built) ---
+  # train_position_producer:
+  #   build: ./services/producers
+  #   command: python train_position_producer.py
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
+  #   env_file: .env
+
+  # sensor_producer:
+  #   build: ./services/producers
+  #   command: python sensor_producer.py --fault-rate 0.1
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
+  #   env_file: .env
+
+  # defect_corridor_weather_producers:
+  #   build: ./services/producers
+  #   command: sh -c "python defect_producer.py & python corridor_timetable_producer.py & python weather_producer.py & wait"
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
+  #   env_file: .env
+
+  # udm_writer:
+  #   build: ./services/ingestion
+  #   command: python udm_writer.py
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
+  #     postgres:
+  #       condition: service_healthy
+  #   env_file: .env
+
+  # --- Phase 4: API gateway (uncomment once services/planning_api is built) ---
+  # planning_api:
+  #   build: ./services/planning_api
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
+  #     postgres:
+  #       condition: service_healthy
+  #   env_file: .env
+
+  # --- Phase 5: frontend (uncomment once dashboard is built) ---
+  # dashboard:
+  #   build: ./dashboard
+  #   ports:
+  #     - "5173:5173"
+  #   depends_on:
+  #     - planning_api
+
+volumes:
+  pgdata:

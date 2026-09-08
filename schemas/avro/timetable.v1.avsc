@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "TimetableV1",
+  "namespace": "com.traintwin.avro",
+  "fields": [
+    {"name": "train_id", "type": "string"},
+    {"name": "section", "type": "string"},
+    {"name": "scheduled_arrival", "type": "string"},
+    {"name": "scheduled_departure", "type": "string"},
+    {"name": "priority_class", "type": "string"}
+  ]
+}

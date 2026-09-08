@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "CorridorAvailabilityV1",
+  "namespace": "com.traintwin.avro",
+  "fields": [
+    {"name": "section", "type": "string"},
+    {"name": "window_start", "type": "string"},
+    {"name": "window_end", "type": "string"},
+    {"name": "block_type", "type": {"type": "enum", "name": "BlockType", "symbols": ["line", "power", "traffic"]}}
+  ]
+}

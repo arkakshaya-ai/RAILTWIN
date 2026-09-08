@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "TrainPositionV1",
+  "namespace": "com.traintwin.avro",
+  "fields": [
+    {"name": "train_id", "type": "string"},
+    {"name": "timestamp", "type": "string"},
+    {"name": "section", "type": "string"},
+    {"name": "chainage_km", "type": "double"},
+    {"name": "speed_kmph", "type": "double"},
+    {"name": "direction", "type": {"type": "enum", "name": "Direction", "symbols": ["UP", "DOWN"]}}
+  ]
+}

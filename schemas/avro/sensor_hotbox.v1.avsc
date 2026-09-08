@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "SensorHotboxV1",
+  "namespace": "com.traintwin.avro",
+  "fields": [
+    {"name": "sensor_id", "type": "string"},
+    {"name": "chainage_km", "type": "double"},
+    {"name": "temperature_c", "type": "double"},
+    {"name": "threshold_breach", "type": "boolean"},
+    {"name": "timestamp", "type": "string"}
+  ]
+}

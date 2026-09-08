@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "GoodsForecastV1",
+  "namespace": "com.traintwin.avro",
+  "fields": [
+    {"name": "section", "type": "string"},
+    {"name": "date", "type": "string"},
+    {"name": "expected_goods_traffic_density", "type": "double"}
+  ]
+}

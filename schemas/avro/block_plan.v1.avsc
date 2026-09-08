@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "BlockPlanV1",
+  "namespace": "com.traintwin.avro",
+  "fields": [
+    {"name": "plan_id", "type": "string"},
+    {"name": "horizon", "type": {"type": "enum", "name": "Horizon", "symbols": ["weekly", "monthly"]}},
+    {"name": "assigned_tasks", "type": {"type": "array", "items": "string"}},
+    {"name": "slot", "type": "string"},
+    {"name": "departments", "type": {"type": "array", "items": "string"}}
+  ]
+}

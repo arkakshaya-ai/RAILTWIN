@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "WeatherV1",
+  "namespace": "com.traintwin.avro",
+  "fields": [
+    {"name": "section", "type": "string"},
+    {"name": "condition", "type": {"type": "enum", "name": "WeatherCondition", "symbols": ["clear", "fog", "monsoon", "heat"]}},
+    {"name": "severity", "type": "int"},
+    {"name": "speed_restriction_kmph", "type": "double"},
+    {"name": "timestamp", "type": "string"}
+  ]
+}

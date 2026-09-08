@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "RecommendationLogV1",
+  "namespace": "com.traintwin.avro",
+  "fields": [
+    {"name": "recommendation_id", "type": "string"},
+    {"name": "conflict_id", "type": "string"},
+    {"name": "options", "type": {"type": "array", "items": "string"}},
+    {"name": "scores", "type": {"type": "array", "items": "double"}},
+    {"name": "controller_action", "type": ["null", "string"], "default": null},
+    {"name": "realized_outcome", "type": ["null", "string"], "default": null}
+  ]
+}

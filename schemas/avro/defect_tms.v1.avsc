@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "DefectTmsV1",
+  "namespace": "com.traintwin.avro",
+  "fields": [
+    {"name": "defect_id", "type": "string"},
+    {"name": "asset_id", "type": "string"},
+    {"name": "category", "type": "string"},
+    {"name": "severity", "type": "int"},
+    {"name": "reported_date", "type": "string"},
+    {"name": "due_date", "type": "string"},
+    {"name": "department_owner", "type": "string", "default": "Engineering"}
+  ]
+}

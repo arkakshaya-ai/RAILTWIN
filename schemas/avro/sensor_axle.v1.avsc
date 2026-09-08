@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "SensorAxleV1",
+  "namespace": "com.traintwin.avro",
+  "fields": [
+    {"name": "sensor_id", "type": "string"},
+    {"name": "chainage_km", "type": "double"},
+    {"name": "occupancy_state", "type": {"type": "enum", "name": "OccupancyState", "symbols": ["OCCUPIED", "CLEAR"]}},
+    {"name": "timestamp", "type": "string"}
+  ]
+}
