@@ -73,7 +73,15 @@ def run_anytime(
         result = {}
 
     proven_optimal = bool(result.get("proven_optimal", False))
-    fail_safe = timed_out or errored or not proven_optimal
+    # CP-SAT does not artificially slow down a small model just because it
+    # was given a tiny max_time_in_seconds -- a trivial problem can still
+    # solve to OPTIMAL in a fraction of a millisecond. So "did we honor the
+    # caller's budget" has to be judged by measured wall-clock elapsed vs.
+    # the budget they actually asked for, not only by the solver's own
+    # optimality flag (which alone would let a 1ms budget silently report
+    # fail_safe=False just because the problem happened to be easy).
+    budget_exceeded = elapsed > budget
+    fail_safe = timed_out or errored or not proven_optimal or budget_exceeded
 
     result["fail_safe"] = fail_safe
     result["elapsed_seconds"] = elapsed
