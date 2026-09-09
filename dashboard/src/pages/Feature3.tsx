@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ScrollSection } from '../components/ScrollSection';
-import { SideNav } from '../components/SideNav';
+import { TabPanel } from '../components/TabPanel';
+import { TabNav } from '../components/TabNav';
+import { TabsProvider } from '../components/TabsProvider';
 import { useApiPoll } from '../api/useApiPoll';
 import { getConflictOptions, getConflicts, getHealth } from '../api/client';
 import { POLL_INTERVAL_MS } from '../api/config';
@@ -45,14 +46,14 @@ export function Feature3Page() {
   const [committedAction, setCommittedAction] = useState<string | null>(null);
 
   return (
-    <>
-      <SideNav sections={SECTIONS} />
+    <TabsProvider sections={SECTIONS}>
+      <TabNav sections={SECTIONS} />
       <div className="relative w-full overflow-hidden bg-surface pb-space-3xl">
         <div className="absolute -top-24 left-1/4 w-[600px] h-[400px] bg-primary-fixed/30 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="absolute top-96 right-10 w-[500px] h-[500px] bg-secondary-fixed/40 rounded-full blur-[140px] pointer-events-none"></div>
 
         <div className="max-w-[1480px] mx-auto px-gutter-mobile md:px-gutter-tablet lg:px-gutter-desktop pt-space-xl flex flex-col gap-space-2xl relative z-10">
-          <ScrollSection id="hero">
+          <TabPanel id="hero">
             <div className="flex flex-col gap-space-2xl">
               <div className="flex flex-col gap-space-xs">
                 <div className="flex items-center gap-space-xs flex-wrap">
@@ -145,9 +146,9 @@ export function Feature3Page() {
                 </div>
               </div>
             </div>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="optimization-engine">
+          <TabPanel id="optimization-engine">
             <section className="flex flex-col gap-space-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-space-sm">
@@ -342,9 +343,9 @@ export function Feature3Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="rerouting-safety">
+          <TabPanel id="rerouting-safety">
             <section className="flex flex-col gap-space-lg">
               <div className="flex items-center justify-between flex-wrap gap-space-sm">
                 <div className="flex items-center gap-space-sm">
@@ -482,9 +483,9 @@ export function Feature3Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="precedence-speed">
+          <TabPanel id="precedence-speed">
             <section className="flex flex-col gap-space-lg">
               <div className="flex items-center justify-between flex-wrap gap-space-sm">
                 <div className="flex items-center gap-space-sm">
@@ -611,9 +612,9 @@ export function Feature3Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="anytime-optimization">
+          <TabPanel id="anytime-optimization">
             <section className="flex flex-col gap-space-lg">
               <div className="flex items-center justify-between flex-wrap gap-space-sm">
                 <div className="flex items-center gap-space-sm">
@@ -700,9 +701,9 @@ export function Feature3Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="dual-engine">
+          <TabPanel id="dual-engine">
             <section className="flex flex-col gap-space-lg">
               <div className="flex items-center justify-between flex-wrap gap-space-sm">
                 <div className="flex items-center gap-space-sm">
@@ -791,9 +792,9 @@ export function Feature3Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="traceability-matrix">
+          <TabPanel id="traceability-matrix">
             <section className="flex flex-col gap-space-lg">
               <div className="flex items-center justify-between flex-wrap gap-space-sm">
                 <div>
@@ -914,9 +915,9 @@ export function Feature3Page() {
                 </a>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
         </div>
       </div>
-    </>
+    </TabsProvider>
   );
 }

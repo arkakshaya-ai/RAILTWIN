@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { ScrollSection } from '../components/ScrollSection';
-import { SideNav } from '../components/SideNav';
+import { TabPanel } from '../components/TabPanel';
+import { TabNav } from '../components/TabNav';
+import { TabsProvider } from '../components/TabsProvider';
 import { useApiPoll } from '../api/useApiPoll';
 import { getHealth, getNetworkState } from '../api/client';
 import { POLL_INTERVAL_MS } from '../api/config';
@@ -70,10 +71,10 @@ export function Feature1Page() {
   const healthOk = !healthLoading && !healthError && health?.ai_engine === 'up';
 
   return (
-    <>
-      <SideNav sections={SECTIONS} />
+    <TabsProvider sections={SECTIONS}>
+      <TabNav sections={SECTIONS} />
       <div className="max-w-[1480px] mx-auto px-gutter-desktop relative z-10">
-        <ScrollSection id="hero">
+        <TabPanel id="hero">
           <div className="w-full bg-surface-container-low -mx-gutter-desktop px-gutter-desktop rounded-xl">
             <div className="max-w-[1480px] mx-auto py-space-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm">
               <div className="flex items-center gap-space-xs flex-wrap">
@@ -188,9 +189,9 @@ export function Feature1Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="live-console">
+        <TabPanel id="live-console">
           <div className="w-full py-space-md">
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-space-lg">
               <div className="xl:col-span-7 flex flex-col gap-space-md">
@@ -485,9 +486,9 @@ export function Feature1Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="comparison">
+        <TabPanel id="comparison">
           <div className="w-full py-space-xl">
             <div className="p-space-lg rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-xs">
@@ -562,8 +563,8 @@ export function Feature1Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
       </div>
-    </>
+    </TabsProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ScrollSection } from '../components/ScrollSection';
-import { SideNav } from '../components/SideNav';
+import { TabPanel } from '../components/TabPanel';
+import { TabNav } from '../components/TabNav';
+import { TabsProvider } from '../components/TabsProvider';
 import { useApiPoll } from '../api/useApiPoll';
 import { getConflicts, getHealth, getNetworkState } from '../api/client';
 import { POLL_INTERVAL_MS } from '../api/config';
@@ -42,15 +43,15 @@ export function HomePage() {
   } = useApiPoll(getHealthWithLatency, POLL_INTERVAL_MS);
 
   return (
-    <>
-      <SideNav sections={SECTIONS} />
+    <TabsProvider sections={SECTIONS}>
+      <TabNav sections={SECTIONS} />
       <div className="relative w-full overflow-hidden bg-gradient-to-b from-[#fff6ed] via-[#ffe9db] to-[#f5fbf6] pb-space-3xl">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1200px] h-[550px] bg-gradient-to-b from-[#ffb68b]/25 via-[#ffdbc8]/30 to-transparent blur-3xl pointer-events-none rounded-full"></div>
         <div className="absolute top-[450px] -left-48 w-[650px] h-[650px] bg-secondary-container/20 blur-3xl pointer-events-none rounded-full"></div>
         <div className="absolute top-[900px] -right-48 w-[700px] h-[700px] bg-[#ffdbc8]/35 blur-3xl pointer-events-none rounded-full"></div>
 
         <div className="max-w-[1480px] mx-auto px-gutter-desktop pt-space-lg relative z-10">
-          <ScrollSection id="hero">
+          <TabPanel id="hero">
 <section className="relative w-full rounded-xl overflow-hidden shadow-2xl bg-surface-container-lowest">  
   
 <div className="relative w-full h-[580px] lg:h-[660px] overflow-hidden">  
@@ -103,9 +104,9 @@ export function HomePage() {
 </div>  
 </div>  
 </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="quick-stats">
+          <TabPanel id="quick-stats">
 <section className="relative -mt-8 mx-auto w-full max-w-5xl z-20 px-gutter-mobile">  
 <div className="bg-surface-container-lowest/90 backdrop-blur-2xl rounded-full shadow-[0_16px_40px_-10px_rgba(18,82,163,0.12)] p-space-xs md:p-space-sm flex flex-col md:flex-row items-center justify-between gap-space-sm transition-all duration-300">  
   
@@ -158,9 +159,9 @@ export function HomePage() {
 </button>  
 </div>  
 </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="section-header">
+          <TabPanel id="section-header">
 <section className="pt-space-3xl pb-space-lg text-center max-w-3xl mx-auto flex flex-col items-center">  
 <div className="inline-flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest mb-space-sm text-on-surface-variant">  
 <span className="material-symbols-outlined text-primary text-[16px]">railway_alert</span>  
@@ -173,9 +174,9 @@ export function HomePage() {
           Engineered like a continuous train corridor: each specialized carriage ingests physical sensor streams, applies predictive deep learning, and commands wayside interlocking in real time.  
         </p>  
 </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="feature-matrix">
+          <TabPanel id="feature-matrix">
 <section className="relative w-full mt-space-md">  
   
 <div className="relative py-space-lg flex flex-col gap-space-2xl">  
@@ -270,9 +271,9 @@ export function HomePage() {
 </div></Link>  
 </div>  
 </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="telemetry-dock">
+          <TabPanel id="telemetry-dock">
 <section className="mt-space-3xl relative">  
 <div className="bg-surface-container-lowest/90 backdrop-blur-xl rounded-xl p-space-xl shadow-xl">  
 <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-md pb-space-lg">  
@@ -352,9 +353,9 @@ export function HomePage() {
 </div>  
 </div>  
 </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="cta-banner">
+          <TabPanel id="cta-banner">
 <section className="mt-space-3xl relative rounded-xl overflow-hidden shadow-2xl bg-gradient-to-r from-primary via-[#1252a3] to-secondary p-space-xl md:p-space-2xl text-on-primary">  
 <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-space-xl">  
 <div className="max-w-2xl flex flex-col gap-space-xs">  
@@ -377,10 +378,10 @@ export function HomePage() {
 </div>  
 </div>  
 </section>
-          </ScrollSection>
+          </TabPanel>
         </div>
       </div>
 
-    </>
+    </TabsProvider>
   );
 }

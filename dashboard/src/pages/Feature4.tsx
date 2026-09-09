@@ -1,5 +1,6 @@
-import { ScrollSection } from '../components/ScrollSection';
-import { SideNav } from '../components/SideNav';
+import { TabPanel } from '../components/TabPanel';
+import { TabNav } from '../components/TabNav';
+import { TabsProvider } from '../components/TabsProvider';
 import { useApiPoll } from '../api/useApiPoll';
 import { getHealth, getMonthlyBlockPlan, getWeeklyBlockPlan } from '../api/client';
 import { POLL_INTERVAL_MS } from '../api/config';
@@ -29,14 +30,14 @@ export function Feature4Page() {
   const representativeSlot = slots[0];
 
   return (
-    <>
-      <SideNav sections={SECTIONS} />
+    <TabsProvider sections={SECTIONS}>
+      <TabNav sections={SECTIONS} />
       <div className="relative w-full overflow-hidden">
         <div className="absolute -top-32 left-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute top-96 right-10 w-[450px] h-[450px] bg-secondary/5 rounded-full blur-2xl pointer-events-none"></div>
 
         <div className="max-w-[1480px] mx-auto px-gutter-desktop py-space-xl flex flex-col gap-space-2xl relative z-10">
-          <ScrollSection id="hero">
+          <TabPanel id="hero">
             <div className="flex flex-col gap-space-lg">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-xs">
                 <div className="flex flex-wrap items-center gap-space-xs text-body-sm font-body-sm text-on-surface-variant">
@@ -162,9 +163,9 @@ export function Feature4Page() {
                 </div>
               </div>
             </div>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="scheduling">
+          <TabPanel id="scheduling">
             <section className="flex flex-col gap-space-lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-xs">
                 <div className="flex items-center gap-space-sm">
@@ -346,9 +347,9 @@ export function Feature4Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="asset-availability">
+          <TabPanel id="asset-availability">
             <section className="flex flex-col gap-space-lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-xs">
                 <div className="flex items-center gap-space-sm">
@@ -570,9 +571,9 @@ export function Feature4Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="spec-matrix">
+          <TabPanel id="spec-matrix">
             <section className="flex flex-col gap-space-md">
               <div className="flex flex-col gap-space-xxs">
                 <div className="flex items-center gap-space-xs">
@@ -654,9 +655,9 @@ export function Feature4Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
         </div>
       </div>
-    </>
+    </TabsProvider>
   );
 }

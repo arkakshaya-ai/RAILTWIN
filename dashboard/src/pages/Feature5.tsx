@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ScrollSection } from '../components/ScrollSection';
-import { SideNav } from '../components/SideNav';
+import { TabPanel } from '../components/TabPanel';
+import { TabNav } from '../components/TabNav';
+import { TabsProvider } from '../components/TabsProvider';
 import { useApiPoll } from '../api/useApiPoll';
 import { getDefects, getEvaluationMetrics, getHealth, getWeeklyBlockPlan, getMonthlyBlockPlan } from '../api/client';
 import { POLL_INTERVAL_MS } from '../api/config';
@@ -40,10 +41,10 @@ export function Feature5Page() {
     : undefined;
 
   return (
-    <>
-      <SideNav sections={SECTIONS} />
+    <TabsProvider sections={SECTIONS}>
+      <TabNav sections={SECTIONS} />
       <div className="max-w-[1480px] mx-auto px-gutter-mobile sm:px-gutter-tablet lg:px-gutter-desktop relative z-10">
-        <ScrollSection id="hero">
+        <TabPanel id="hero">
           <div className="flex flex-col gap-space-lg">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-xs">
               <div className="flex flex-col gap-space-xxs">
@@ -133,9 +134,9 @@ export function Feature5Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="predictive-maintenance">
+        <TabPanel id="predictive-maintenance">
           <div className="flex flex-col gap-space-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-space-sm">
@@ -275,9 +276,9 @@ export function Feature5Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="data-model">
+        <TabPanel id="data-model">
           <div className="flex flex-col gap-space-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-space-sm">
@@ -385,9 +386,9 @@ export function Feature5Page() {
               </pre>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="block-generation">
+        <TabPanel id="block-generation">
           <div className="flex flex-col gap-space-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-space-sm">
@@ -521,9 +522,9 @@ export function Feature5Page() {
               )}
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="joint-blocks">
+        <TabPanel id="joint-blocks">
           <div className="flex flex-col gap-space-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-space-sm">
@@ -614,9 +615,9 @@ export function Feature5Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="multi-horizon">
+        <TabPanel id="multi-horizon">
           <div className="flex flex-col gap-space-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-space-sm">
@@ -751,9 +752,9 @@ export function Feature5Page() {
               )}
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="spec-matrix">
+        <TabPanel id="spec-matrix">
           <div className="flex flex-col gap-space-md pb-space-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-space-sm">
@@ -838,8 +839,8 @@ export function Feature5Page() {
               </a>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
       </div>
-    </>
+    </TabsProvider>
   );
 }

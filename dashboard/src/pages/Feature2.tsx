@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { ScrollSection } from '../components/ScrollSection';
-import { SideNav } from '../components/SideNav';
+import { TabPanel } from '../components/TabPanel';
+import { TabNav } from '../components/TabNav';
+import { TabsProvider } from '../components/TabsProvider';
 import { useApiPoll } from '../api/useApiPoll';
 import { getConflicts, getHealth } from '../api/client';
 import { POLL_INTERVAL_MS } from '../api/config';
@@ -56,14 +57,14 @@ export function Feature2Page() {
   const healthOk = !healthLoading && !healthError && health?.ai_engine === 'up';
 
   return (
-    <>
-      <SideNav sections={SECTIONS} />
+    <TabsProvider sections={SECTIONS}>
+      <TabNav sections={SECTIONS} />
       <div className="relative w-full overflow-hidden">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute top-80 right-10 w-[30rem] h-[30rem] bg-secondary-container/20 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="max-w-[1480px] mx-auto px-gutter-desktop py-space-xl flex flex-col gap-space-2xl relative z-10">
-          <ScrollSection id="hero">
+          <TabPanel id="hero">
             <div className="flex flex-col gap-space-lg">
               <div className="flex flex-wrap items-center justify-between gap-space-sm pb-space-xs">
                 <div className="flex items-center gap-space-xs text-on-surface-variant font-label-mono text-body-sm">
@@ -200,9 +201,9 @@ export function Feature2Page() {
                 </div>
               </div>
             </div>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="conflict-prediction">
+          <TabPanel id="conflict-prediction">
             <section className="flex flex-col gap-space-lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
                 <div className="flex items-center gap-space-sm">
@@ -359,9 +360,9 @@ export function Feature2Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="cascading-delay">
+          <TabPanel id="cascading-delay">
             <section className="flex flex-col gap-space-lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
                 <div className="flex items-center gap-space-sm">
@@ -453,9 +454,9 @@ export function Feature2Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="weather">
+          <TabPanel id="weather">
             <section className="flex flex-col gap-space-lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
                 <div className="flex items-center gap-space-sm">
@@ -549,9 +550,9 @@ export function Feature2Page() {
                 <span className="font-label-mono text-label-mono text-secondary shrink-0">Validated against CRIS 2024 Logs</span>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="interlocking-fsm">
+          <TabPanel id="interlocking-fsm">
             <section className="flex flex-col gap-space-lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
                 <div className="flex items-center gap-space-sm">
@@ -628,9 +629,9 @@ export function Feature2Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="spec-matrix">
+          <TabPanel id="spec-matrix">
             <section className="flex flex-col gap-space-md">
               <div className="flex flex-col">
                 <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Engine Specification Summary</span>
@@ -722,9 +723,9 @@ export function Feature2Page() {
                 </div>
               </div>
             </section>
-          </ScrollSection>
+          </TabPanel>
         </div>
       </div>
-    </>
+    </TabsProvider>
   );
 }

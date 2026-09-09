@@ -41,11 +41,3 @@
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
 }
-
-/* Scroll-snap ancestor for ScrollSection children. `proximity`, not `mandatory` —
-   `mandatory` can trap the user on a section with internal overflow (e.g. a data
-   table or matrix on a later Feature page) by refusing to let a normal scroll
-   gesture leave it. */
-.scroll-snap-container {
-  scroll-snap-type: y proximity;
-}

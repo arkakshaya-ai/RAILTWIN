@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ScrollSection } from '../components/ScrollSection';
-import { SideNav } from '../components/SideNav';
+import { TabPanel } from '../components/TabPanel';
+import { TabNav } from '../components/TabNav';
+import { TabsProvider } from '../components/TabsProvider';
 import { useApiPoll } from '../api/useApiPoll';
 import { getHealth } from '../api/client';
 import { POLL_INTERVAL_MS } from '../api/config';
@@ -22,14 +23,14 @@ export function Feature8Page() {
   const [heartbeatDrop, setHeartbeatDrop] = useState(false);
 
   return (
-    <>
-      <SideNav sections={SECTIONS} />
+    <TabsProvider sections={SECTIONS}>
+      <TabNav sections={SECTIONS} />
       <div className="relative w-full overflow-hidden">
         <div className="absolute -top-32 right-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none"></div>
         <div className="absolute top-48 left-12 w-80 h-80 rounded-full bg-secondary/5 blur-3xl pointer-events-none"></div>
 
         <div className="max-w-[1480px] mx-auto px-gutter-mobile md:px-gutter-tablet xl:px-gutter-desktop py-space-xl flex flex-col gap-space-2xl relative z-10">
-          <ScrollSection id="hero">
+          <TabPanel id="hero">
             <div className="flex flex-col gap-space-lg">
               <div className="flex flex-col gap-space-md">
                 <div className="flex items-center gap-space-xs text-body-sm text-on-surface-variant flex-wrap font-body-sm">
@@ -148,9 +149,9 @@ export function Feature8Page() {
                 )}
               </div>
             </div>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="fallback-mode">
+          <TabPanel id="fallback-mode">
             <div className="flex flex-col gap-space-lg">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-sm pb-space-xs">
                 <div>
@@ -273,9 +274,9 @@ export function Feature8Page() {
                 </div>
               </div>
             </div>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="latency-tiers">
+          <TabPanel id="latency-tiers">
             <div className="flex flex-col gap-space-lg">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-sm pb-space-xs">
                 <div>
@@ -362,9 +363,9 @@ export function Feature8Page() {
                 </div>
               </div>
             </div>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="data-replication">
+          <TabPanel id="data-replication">
             <div className="flex flex-col gap-space-lg">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-sm pb-space-xs">
                 <div>
@@ -418,9 +419,9 @@ export function Feature8Page() {
                 </div>
               </div>
             </div>
-          </ScrollSection>
+          </TabPanel>
 
-          <ScrollSection id="spec-matrix">
+          <TabPanel id="spec-matrix">
             <div className="flex flex-col gap-space-md pb-space-2xl">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-sm pb-space-xs">
                 <div>
@@ -508,9 +509,9 @@ export function Feature8Page() {
                 </button>
               </div>
             </div>
-          </ScrollSection>
+          </TabPanel>
         </div>
       </div>
-    </>
+    </TabsProvider>
   );
 }

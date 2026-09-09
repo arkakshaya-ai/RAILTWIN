@@ -1,35 +1,24 @@
 import { useState } from 'react';
-import { useActiveSection } from '../hooks/useActiveSection';
+import { useTabs, type TabSection } from './TabsProvider';
 
-export interface SideNavSection {
-  id: string;
-  label: string;
-}
-
-interface SideNavProps {
-  sections: SideNavSection[];
-}
-
-function scrollToSection(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+interface TabNavProps {
+  sections: TabSection[];
 }
 
 /**
- * Desktop (>=lg): fixed dot+label rail on the right edge.
- * Mobile (<lg): the fixed rail would either overlap narrow content or need to
- * shrink to unreadable dots, so instead it collapses into a small floating
- * toggle (bottom-right) that opens a bottom-sheet drawer listing the same
- * sections — never overlaps page content either way.
+ * Replaces SideNav: same dot+label rail on desktop / floating-drawer on
+ * mobile, but a click now switches the active tab (via TabsProvider)
+ * instead of scrolling to an anchor, and the active state is read straight
+ * from context instead of an IntersectionObserver.
  */
-export function SideNav({ sections }: SideNavProps) {
-  const ids = sections.map((s) => s.id);
-  const activeId = useActiveSection(ids);
+export function TabNav({ sections }: TabNavProps) {
+  const { activeId, setActiveId } = useTabs();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <>
       <nav
-        aria-label="Section navigation"
+        aria-label="Section tabs"
         className="hidden lg:flex fixed right-space-lg top-1/2 -translate-y-1/2 z-40 flex-col gap-space-sm"
       >
         {sections.map((s) => {
@@ -37,7 +26,7 @@ export function SideNav({ sections }: SideNavProps) {
           return (
             <button
               key={s.id}
-              onClick={() => scrollToSection(s.id)}
+              onClick={() => setActiveId(s.id)}
               className="group flex items-center gap-space-xs justify-end"
               aria-current={active ? 'true' : undefined}
             >
@@ -60,7 +49,7 @@ export function SideNav({ sections }: SideNavProps) {
 
       <button
         onClick={() => setDrawerOpen(true)}
-        aria-label="Open section navigation"
+        aria-label="Open section tabs"
         className="lg:hidden fixed right-space-md bottom-space-md z-40 w-12 h-12 rounded-full bg-primary-container text-on-primary shadow-lg flex items-center justify-center"
       >
         <span className="material-symbols-outlined text-[20px]">list</span>
@@ -68,10 +57,7 @@ export function SideNav({ sections }: SideNavProps) {
 
       {drawerOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end" role="dialog" aria-modal="true">
-          <div
-            className="absolute inset-0 bg-on-surface/40"
-            onClick={() => setDrawerOpen(false)}
-          />
+          <div className="absolute inset-0 bg-on-surface/40" onClick={() => setDrawerOpen(false)} />
           <div className="relative bg-surface-container-lowest rounded-t-xl shadow-2xl p-space-lg flex flex-col gap-space-xs max-h-[70vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-space-xs">
               <span className="font-headline-sm text-headline-sm text-on-surface">Jump to section</span>
@@ -85,7 +71,7 @@ export function SideNav({ sections }: SideNavProps) {
                 <button
                   key={s.id}
                   onClick={() => {
-                    scrollToSection(s.id);
+                    setActiveId(s.id);
                     setDrawerOpen(false);
                   }}
                   className={`flex items-center gap-space-sm px-space-sm py-space-xs rounded-full text-left font-body-md text-body-md ${

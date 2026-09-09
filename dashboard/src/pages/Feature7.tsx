@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ScrollSection } from '../components/ScrollSection';
-import { SideNav } from '../components/SideNav';
+import { TabPanel } from '../components/TabPanel';
+import { TabNav } from '../components/TabNav';
+import { TabsProvider } from '../components/TabsProvider';
 import { useApiPoll } from '../api/useApiPoll';
 import { getConflictOptions, getConflicts, getHealth, resolveConflict } from '../api/client';
 import { POLL_INTERVAL_MS } from '../api/config';
@@ -53,10 +54,10 @@ export function Feature7Page() {
   }
 
   return (
-    <>
-      <SideNav sections={SECTIONS} />
+    <TabsProvider sections={SECTIONS}>
+      <TabNav sections={SECTIONS} />
       <div className="max-w-[1480px] mx-auto px-gutter-desktop relative z-10">
-        <ScrollSection id="hero">
+        <TabPanel id="hero">
           <div className="flex flex-col gap-space-lg">
             <div className="w-full bg-surface-container-low -mx-gutter-desktop px-gutter-desktop py-space-md rounded-xl">
               <div className="max-w-[1480px] mx-auto flex flex-col xl:flex-row xl:items-center justify-between gap-space-md">
@@ -127,9 +128,9 @@ export function Feature7Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="review-form">
+        <TabPanel id="review-form">
           <div className="flex flex-col gap-space-2xl">
             <div className="flex flex-col gap-space-md">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
@@ -311,9 +312,9 @@ export function Feature7Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="feedback-loop">
+        <TabPanel id="feedback-loop">
           <div className="flex flex-col gap-space-xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
               <div>
@@ -394,9 +395,9 @@ export function Feature7Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="ergonomics">
+        <TabPanel id="ergonomics">
           <div className="flex flex-col gap-space-2xl">
             <div className="flex flex-col gap-space-xxs max-w-3xl">
               <span className="font-label-caps text-label-caps text-primary uppercase tracking-widest">MODULE 4 // HUMAN FACTORS &amp; ERGONOMICS</span>
@@ -445,9 +446,9 @@ export function Feature7Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="spec-matrix">
+        <TabPanel id="spec-matrix">
           <div className="flex flex-col gap-space-xl pb-space-2xl">
             <div className="flex flex-col gap-space-xxs">
               <span className="font-label-caps text-label-caps text-primary uppercase tracking-widest">MODULE 5 // REGULATORY COMPLIANCE MATRIX</span>
@@ -520,8 +521,8 @@ export function Feature7Page() {
               </a>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
       </div>
-    </>
+    </TabsProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ScrollSection } from '../components/ScrollSection';
-import { SideNav } from '../components/SideNav';
+import { TabPanel } from '../components/TabPanel';
+import { TabNav } from '../components/TabNav';
+import { TabsProvider } from '../components/TabsProvider';
 import { useApiPoll } from '../api/useApiPoll';
 import { getConflicts, getHealth, triggerEmergency } from '../api/client';
 import { POLL_INTERVAL_MS } from '../api/config';
@@ -39,10 +40,10 @@ export function Feature6Page() {
   }
 
   return (
-    <>
-      <SideNav sections={SECTIONS} />
+    <TabsProvider sections={SECTIONS}>
+      <TabNav sections={SECTIONS} />
       <div className="max-w-[1480px] mx-auto px-gutter-desktop relative z-10">
-        <ScrollSection id="hero">
+        <TabPanel id="hero">
           <div className="flex flex-col gap-space-lg">
             <div className="w-full bg-surface-container-low -mx-gutter-desktop px-gutter-desktop py-space-sm rounded-xl">
               <div className="max-w-[1480px] mx-auto flex flex-col xl:flex-row items-start xl:items-center justify-between gap-space-md">
@@ -177,9 +178,9 @@ export function Feature6Page() {
               )}
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="cross-cutting-pipeline">
+        <TabPanel id="cross-cutting-pipeline">
           <div className="flex flex-col gap-space-xl">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-space-md">
               <div className="flex flex-col gap-space-xxs">
@@ -269,9 +270,9 @@ export function Feature6Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="rescheduling-engine">
+        <TabPanel id="rescheduling-engine">
           <div className="flex flex-col gap-space-xl">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
               <div className="flex flex-col gap-space-xxs max-w-3xl">
@@ -364,9 +365,9 @@ export function Feature6Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="cabin-telemetry">
+        <TabPanel id="cabin-telemetry">
           <div className="flex flex-col gap-space-xl">
             <div className="flex flex-col gap-space-xxs max-w-3xl">
               <span className="font-label-caps text-label-caps text-primary uppercase">MODULE 3 / CABIN TELEMETRY HUD</span>
@@ -455,9 +456,9 @@ export function Feature6Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="dept-coordination">
+        <TabPanel id="dept-coordination">
           <div className="flex flex-col gap-space-xl">
             <div className="flex flex-col gap-space-xxs max-w-3xl">
               <span className="font-label-caps text-label-caps text-primary uppercase">MODULE 4 / DIVISIONAL COMMAND CONSOLE</span>
@@ -523,9 +524,9 @@ export function Feature6Page() {
               </div>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
 
-        <ScrollSection id="spec-matrix">
+        <TabPanel id="spec-matrix">
           <div className="flex flex-col gap-space-xl pb-space-2xl">
             <div className="flex flex-col gap-space-xxs max-w-3xl">
               <span className="font-label-caps text-label-caps text-primary uppercase">MODULE 5 / SIH TRACEABILITY &amp; COMPLIANCE MATRIX</span>
@@ -599,8 +600,8 @@ export function Feature6Page() {
               </button>
             </div>
           </div>
-        </ScrollSection>
+        </TabPanel>
       </div>
-    </>
+    </TabsProvider>
   );
 }
