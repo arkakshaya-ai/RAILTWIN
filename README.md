@@ -55,7 +55,9 @@ services/traffic_optimizer/     CP-SAT conflict resolution + safety validation
 services/block_optimizer/       CP-SAT block planning + joint-block logic
 services/common/          shared anytime/fail-safe timeout wrapper
 services/scheduling/      base timetable, incremental re-opt, cron jobs
-services/planning_api/    FastAPI gateway implementing every /api/v1 route
+services/planning_api/    FastAPI gateway implementing every /api/v1 route,
+                          plus live_feed.py's own Kafka consumer keeping this
+                          process's digital twin/weather store live
 services/feedback_loop/   recommendation logging (DB + Kafka)
 services/evaluation/      baseline simulator + before/after metrics
 dashboard/                React/Vite/TS frontend (RailTwin UI, live-wired)
@@ -161,17 +163,67 @@ Stated upfront, not left for a reviewer to discover:
   predicted conflict's id, valid only until the next `/conflicts` call —
   there's no persistent conflict store yet, so IDs don't survive a restart
   or a second call.
-- **This sandbox never ran a live Kafka/Postgres.** All Phase 0-7 code was
-  built for real confluent-kafka/SQLAlchemy usage and is committed as such,
-  but the development environment this was built in has no docker daemon.
-  Every module's core logic (schema validation, state fusion, DLQ routing,
-  optimizer behavior, API routes) is verified by the pytest suite without a
-  broker/DB, using dependency-injected SQLite/mocked producers — but actual
-  Kafka delivery, `udm_writer.py`'s live consumer loop, and the
-  `docker compose up` full-stack path have not been exercised end-to-end
-  against a real broker. `SEED_DEMO_DATA` exists specifically to make the
-  API demoable without one; a deployer with Docker should still verify the
-  full path.
+- **Verified end-to-end against a real Kafka broker and Postgres** (native
+  Apache Kafka 3.7 in KRaft mode + PostgreSQL 15, not just this repo's own
+  test doubles) in a session with real container/network access — every
+  producer, `udm_writer.py`'s live consumer loop, `planning_api`'s own live
+  feed (below), the conflict-resolve → `recommendation_log` write, and both
+  scheduled block-plan jobs were run for real, not just unit-tested. That
+  pass caught and fixed several bugs this sandbox's earlier "no docker
+  daemon" constraint had let ship silently:
+  - `defect_task.overdue` was a `GENERATED ALWAYS AS (... CURRENT_DATE)
+    STORED` column — Postgres rejects `CURRENT_DATE` there (not immutable),
+    so `schemas/sql/udm_schema.sql` failed to apply at all. It's now a plain
+    column; `overdue` is derived at read time everywhere it's used, which is
+    what the app already did.
+  - `corridor_block_slot.window_start`/`window_end` and
+    `block_plan.generated_at`/`recommendation_log.created_at` were declared
+    `TIMESTAMP` in the DDL but every writer sends them as ISO-8601 strings
+    through `Text`-typed SQLAlchemy columns — a real Postgres rejects the
+    bind with a `DatatypeMismatch`. The first one crashed `udm_writer.py`'s
+    whole consumer loop (no live corridor/train/defect ingestion after
+    that) the moment a real `corridor.availability.v1` message arrived; the
+    second broke the scheduled block-plan jobs; the third broke
+    `POST /conflicts/{id}/resolve`. All three columns are now `TEXT`,
+    matching what the code already wrote.
+  - `udm_writer.py`'s consumer loop had no exception guard around
+    `writer.handle(...)`: one bad row (any of the above, or a future schema
+    edge case) took the entire ingestion process down, silently stopping
+    ingestion for every topic. It now logs and keeps polling.
+  - **The digital twin and weather store were never actually live once
+    `udm_writer` and `planning_api` run as separate containers** (exactly
+    what `docker-compose.yml` does): `udm_writer.py` fed its *own*
+    process-local `digital_twin_api`/`weather_store` singleton, which
+    `planning_api`'s routes never see. `services/planning_api/live_feed.py`
+    is the fix — `planning_api` now runs its own Kafka consumer (its own
+    consumer group, so both processes get every message) feeding its own
+    in-memory stores, started from `main.py`'s startup and never allowed to
+    crash it. This was the core gap between "the code is written for Kafka"
+    and "live tracking actually works once deployed" — confirmed by
+    running producers, `udm_writer`, and `planning_api` as three separate
+    OS processes against one real broker and watching `GET
+    /api/v1/network/state` track a train's `chainage_km` advance in real
+    time from a process that never seeded or touched that data itself.
+  - `run_weekly_block_plan_job`/`run_monthly_block_plan_job`
+    (`services/scheduling/jobs.py`) always solved over `seed_demo_defects`/
+    `seed_demo_slots`, never live `defect_task`/`corridor_block_slot` rows —
+    so the scheduled cron jobs were never actually live, and on top of that
+    would `IntegrityError` on a real deployment the moment `block_plan`'s
+    foreign key to `corridor_block_slot` was enforced (SQLite, used in
+    tests, never enforces it, so this shipped unnoticed). Both jobs now
+    read live rows with the same DB-first/demo-fallback pattern
+    `routers/blockplan.py` already used, and `_persist_plans` upserts every
+    referenced slot first so the fallback path satisfies the constraint too.
+  - `GET /api/v1/defects` always returned `[]` outside of
+    `SEED_DEMO_DATA=true` — it never read `defect_task` at all. It now
+    reads live rows, scores them, and writes `priority_score` back, falling
+    back to the demo batch only when the DB has no rows yet.
+
+  `docker compose up`'s exact image versions (`confluentinc/cp-kafka:7.6.0`,
+  `postgres:15`) were not themselves pulled in that session (registry access
+  was to a native Kafka/Postgres install, not those containers) — the wiring
+  above is what changed, not anything Docker-image-specific, so this is a
+  low-risk gap rather than an unverified one.
 - **Emergency re-optimization is bounded to one conflict.** `POST
   /api/v1/emergency/trigger` resolves the single most-severe conflict on
   the affected section (not every predicted conflict) to keep the joint

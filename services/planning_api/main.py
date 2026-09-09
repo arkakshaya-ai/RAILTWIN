@@ -1,19 +1,24 @@
 """Phase 4 FastAPI app: `/api/v1` planning/monitoring gateway over the
 digital twin and the conflict/priority/block-optimization engines.
 
-Startup wires: (1) `services.scheduling.jobs`'s two apscheduler cron jobs
-(weekly block-plan regeneration daily, monthly regeneration weekly) onto a
-shared `BackgroundScheduler`, driven off the production engine; (2) one
+Startup wires: (1) `services.planning_api.live_feed`'s own Kafka consumer
+group, subscribed to the train/sensor/weather topics so this process's
+in-memory digital twin and weather store stay live even when `udm_writer`
+runs in a separate container (see that module's docstring for why a
+consumer local to this process is required at all); (2)
+`services.scheduling.jobs`'s two apscheduler cron jobs (weekly block-plan
+regeneration daily, monthly regeneration weekly) onto a shared
+`BackgroundScheduler`, driven off the production engine; (3) one
 synchronous AI-engine self-check so `/health` has real data on the very
 first request instead of nulls, followed by a repeating interval job for
-later checks; (3), when `SEED_DEMO_DATA` is on, a synthetic digital-twin
-train convergence so `/conflicts` has something to report in this sandbox
-where no producer/consumer is actually running against a broker.
+later checks; (4), when `SEED_DEMO_DATA` is on, a synthetic digital-twin
+train convergence so `/conflicts` has something to report before the live
+feed's first real message arrives (or at all, when no broker is running).
 
-None of this is allowed to crash startup: there is no live Kafka/Postgres in
-this sandbox, and train-position/sensor routes must stay usable even if the
-DB or scheduler can't come up (Section 7 NFR), so every startup step is
-independently caught and logged rather than left to propagate.
+None of this is allowed to crash startup: train-position/sensor routes must
+stay usable even if Kafka, the DB, or the scheduler can't come up (Section 7
+NFR), so every startup step is independently caught and logged rather than
+left to propagate.
 """
 from __future__ import annotations
 
@@ -27,17 +32,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from services.planning_api import health as health_module
 from services.planning_api.demo_data import SEED_DEMO_DATA, seed_demo_digital_twin_state
 from services.planning_api.deps import get_engine
+from services.planning_api.live_feed import start_live_feed
 from services.planning_api.routers import blockplan, conflicts, defects, emergency, evaluation, health, network
 from services.scheduling.jobs import start_scheduler
 
 logger = logging.getLogger(__name__)
 
 _scheduler = None
+_live_feed = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _scheduler
+    global _scheduler, _live_feed
     engine = get_engine()
 
     try:
@@ -52,6 +59,11 @@ async def lifespan(app: FastAPI):
             seed_demo_digital_twin_state()
         except Exception as exc:
             logger.warning("startup: demo digital-twin seeding failed: %s", exc)
+
+    try:
+        _live_feed = start_live_feed()
+    except Exception as exc:
+        logger.warning("startup: live feed failed to start: %s", exc)
 
     health_module.run_self_check()
 
@@ -70,6 +82,8 @@ async def lifespan(app: FastAPI):
 
     if _scheduler is not None:
         _scheduler.shutdown(wait=False)
+    if _live_feed is not None:
+        _live_feed.stop()
 
 
 app = FastAPI(title="Train Traffic & Block Planning API", lifespan=lifespan)

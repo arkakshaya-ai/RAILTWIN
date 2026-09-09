@@ -17,10 +17,10 @@ from datetime import datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from sqlalchemy import Engine
+from sqlalchemy import Engine, select
 
 from services.block_optimizer.anytime_wrapper import plan_tasks
-from services.ingestion.udm_writer import block_plan_table, portable_upsert
+from services.ingestion.udm_writer import block_plan_table, corridor_block_slot_table, defect_task_table, portable_upsert
 from services.planning_api.demo_data import seed_demo_defects, seed_demo_slots
 
 logger = logging.getLogger(__name__)
@@ -38,10 +38,53 @@ WEEKLY_PLAN_CRON = {"hour": 2, "minute": 0}
 MONTHLY_PLAN_CRON = {"day_of_week": "sun", "hour": 3, "minute": 0}
 
 
-def _persist_plans(engine: Engine, plans: list[dict]) -> list[str]:
+def _read_live_tasks(engine: Engine) -> list[dict]:
+    with engine.connect() as conn:
+        return [dict(row) for row in conn.execute(select(defect_task_table)).mappings().all()]
+
+
+def _read_live_slots(engine: Engine) -> list[dict]:
+    with engine.connect() as conn:
+        return [dict(row) for row in conn.execute(select(corridor_block_slot_table)).mappings().all()]
+
+
+def _load_tasks_and_slots(engine: Engine, weeks: int) -> tuple[list[dict], list[dict]]:
+    """Live `defect_task`/`corridor_block_slot` rows when there are any (a
+    real deployment with producers/udm_writer running), else the fixed-seed
+    demo dataset -- mirroring routers/blockplan.py's DB-first/fallback
+    pattern so the scheduled cron jobs plan over the same live data the
+    rest of the API serves instead of *always* solving over demo data
+    regardless of what's actually in the DB.
+    """
+    try:
+        tasks = _read_live_tasks(engine)
+        slots = _read_live_slots(engine)
+    except Exception as exc:
+        logger.warning("block-plan job: DB read failed, falling back to demo data: %s", exc)
+        tasks, slots = [], []
+
+    if not tasks:
+        tasks = seed_demo_defects()
+    if not slots:
+        slots = seed_demo_slots(weeks=weeks)
+    return tasks, slots
+
+
+def _persist_plans(engine: Engine, plans: list[dict], slots: list[dict]) -> list[str]:
     generated_at = datetime.now(timezone.utc).isoformat()
     written = []
     with engine.begin() as conn:
+        # block_plan.slot_id is a foreign key into corridor_block_slot, so
+        # every slot a plan can reference must exist there first -- true by
+        # construction for live slots (already persisted by udm_writer), but
+        # not for the fixed-seed demo slots `_load_tasks_and_slots` falls
+        # back to on a fresh DB, which were never written anywhere. Upserting
+        # them here (idempotent for the already-live case) keeps both paths
+        # satisfying the constraint instead of the demo path only surfacing
+        # this as an IntegrityError the first time it runs against real
+        # Postgres (SQLite, used in tests, does not enforce this FK).
+        for slot in slots:
+            portable_upsert(conn, corridor_block_slot_table, slot, "slot_id")
         for plan in plans:
             row = {
                 # solver.py derives plan_id deterministically from slot_id
@@ -65,19 +108,17 @@ def _persist_plans(engine: Engine, plans: list[dict]) -> list[str]:
 
 
 def run_weekly_block_plan_job(engine: Engine) -> dict:
-    tasks = seed_demo_defects()
-    slots = seed_demo_slots(weeks=2)
+    tasks, slots = _load_tasks_and_slots(engine, weeks=2)
     result = plan_tasks(tasks, slots, horizon=WEEKLY_HORIZON, time_budget_seconds=10.0)
-    written = _persist_plans(engine, result.get("plans", []))
+    written = _persist_plans(engine, result.get("plans", []), slots)
     logger.info("weekly block-plan job wrote %d plan row(s)", len(written))
     return {**result, "written_plan_ids": written}
 
 
 def run_monthly_block_plan_job(engine: Engine) -> dict:
-    tasks = seed_demo_defects()
-    slots = seed_demo_slots(weeks=5)
+    tasks, slots = _load_tasks_and_slots(engine, weeks=5)
     result = plan_tasks(tasks, slots, horizon=MONTHLY_HORIZON, time_budget_seconds=10.0)
-    written = _persist_plans(engine, result.get("plans", []))
+    written = _persist_plans(engine, result.get("plans", []), slots)
     logger.info("monthly block-plan job wrote %d plan row(s)", len(written))
     return {**result, "written_plan_ids": written}
 
