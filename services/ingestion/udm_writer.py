@@ -7,12 +7,15 @@ executes the upserts, and `main()` wires the real confluent-kafka Consumer.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
 from datetime import date, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
+logger = logging.getLogger(__name__)
 
 from sqlalchemy import (
     Column,
@@ -241,7 +244,16 @@ def main() -> None:
             except SchemaValidationError as exc:
                 dlq_handler.route(topic, message, exc)
                 continue
-            writer.handle(topic, message)
+            try:
+                writer.handle(topic, message)
+            except Exception as exc:
+                # A single bad row (a DB constraint violation, a transient
+                # connection drop) must not take the whole consumer loop --
+                # and every other topic's ingestion with it -- down. Log and
+                # keep polling rather than letting this propagate past the
+                # outer try/except, which previously only excepted
+                # KeyboardInterrupt and let anything else kill the process.
+                logger.warning("udm_writer: failed to persist %s message, skipping: %s", topic, exc)
     except KeyboardInterrupt:
         pass
     finally:
