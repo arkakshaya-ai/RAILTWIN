@@ -20,6 +20,7 @@ import random
 from datetime import datetime, timedelta, timezone
 
 from services.digital_twin.api import DigitalTwinApi, digital_twin_api
+from services.digital_twin.weather_store import WeatherStore, weather_store
 from services.ingestion.udm_writer import corridor_slot_row
 from services.producers.corridor_timetable_producer import build_corridor_availability
 from services.producers.defect_producer import build_defect_message
@@ -39,6 +40,25 @@ DEMO_CONFLICT_TRAINS = (
     {"train_id": "TRN-101", "chainage_km": 64.0, "speed_kmph": 70.0, "direction": "UP"},
     {"train_id": "TRN-102", "chainage_km": 68.0, "speed_kmph": 65.0, "direction": "UP"},
 )
+
+# Task 6.3: the same section as the demo conflict, so the weather-as-a-
+# constraint wiring is visible end-to-end in this sandbox's default demo
+# (GET /conflicts/{id}/options for the seeded SEC-B conflict actually uses
+# this restriction instead of the flat DEFAULT_SPEED_RESTRICTION_KMPH)
+# without needing a separate scripted scenario just to see it fire once.
+DEMO_WEATHER_SECTION = DEMO_CONFLICT_SECTION
+DEMO_WEATHER_SPEED_RESTRICTION_KMPH = 40.0
+
+
+def build_demo_weather_message(now: datetime | None = None) -> dict:
+    now = now or datetime.now(timezone.utc)
+    return {
+        "section": DEMO_WEATHER_SECTION,
+        "condition": "fog",
+        "severity": 4,
+        "speed_restriction_kmph": DEMO_WEATHER_SPEED_RESTRICTION_KMPH,
+        "timestamp": now.isoformat(),
+    }
 
 
 def seed_demo_defects(
@@ -81,8 +101,13 @@ def seed_demo_slots(
     return slots
 
 
-def seed_demo_digital_twin_state(twin: DigitalTwinApi | None = None, now: datetime | None = None) -> None:
+def seed_demo_digital_twin_state(
+    twin: DigitalTwinApi | None = None,
+    now: datetime | None = None,
+    weather: WeatherStore | None = None,
+) -> None:
     twin = twin or digital_twin_api
+    weather = weather or weather_store
     timestamp = (now or datetime.now(timezone.utc)).isoformat()
     for train in DEMO_CONFLICT_TRAINS:
         twin.ingest(
@@ -96,3 +121,4 @@ def seed_demo_digital_twin_state(twin: DigitalTwinApi | None = None, now: dateti
                 "timestamp": timestamp,
             },
         )
+    weather.update(build_demo_weather_message(now))

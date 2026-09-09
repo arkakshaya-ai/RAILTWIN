@@ -143,8 +143,24 @@ class EmergencyTriggerRequest(BaseModel):
 class EmergencyTriggerResponse(BaseModel):
     status: str
     reoptimization_id: str
+    # Additive (Task 6.4): summaries of the joint traffic/block
+    # re-optimization this trigger ran. None by default so a caller/test
+    # built against the Phase-4 stub contract still parses this response.
+    traffic_result: Optional[dict[str, Any]] = None
+    block_result: Optional[dict[str, Any]] = None
+
+
+class ServiceHealthEntry(BaseModel):
+    status: Literal["up", "down"]
+    latency_ms: float
+    last_heartbeat: Optional[str] = None
 
 
 class HealthResponse(BaseModel):
     ai_engine: Literal["up", "down"]
     last_heartbeat: Optional[str] = None
+    # Additive (Task 6.1): per-service breakdown behind the same aggregate
+    # `ai_engine`/`last_heartbeat` fields above. Defaults to {} so the old
+    # response shape (just the two aggregate fields) is still a strict
+    # subset of this one.
+    services: dict[str, ServiceHealthEntry] = {}

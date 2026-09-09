@@ -16,7 +16,9 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 
 from services.conflict_prediction.fast_tier import predict_conflicts
+from services.conflict_prediction.fast_tier_fallback import fallback_resolution
 from services.digital_twin.api import digital_twin_api
+from services.digital_twin.weather_store import weather_store
 from services.feedback_loop.logger import log_recommendation
 from services.planning_api.deps import get_engine
 from services.planning_api.models import (
@@ -76,18 +78,32 @@ def get_conflict_options(
 
     conflict = {"section": cached["section"], "trains": enrich_trains(trains)}
 
-    # A per-section weather-derived speed restriction (Phase 6) threads
-    # through this same optional query param rather than requiring a route
-    # signature change later -- see anytime_wrapper.resolve_conflict.
-    kwargs: dict = {}
-    if speed_restriction_kmph is not None:
-        kwargs["speed_restriction_kmph"] = speed_restriction_kmph
+    # Task 6.3: when the caller doesn't pass an explicit override, the
+    # section's live weather reading (if any) sets the effective speed
+    # restriction instead of silently falling back to the flat
+    # safety_validation.DEFAULT_SPEED_RESTRICTION_KMPH -- weather becomes a
+    # real input to which candidates get hard-rejected, not just a display
+    # value elsewhere in the app.
+    kwargs: dict = {
+        "speed_restriction_kmph": (
+            speed_restriction_kmph
+            if speed_restriction_kmph is not None
+            else weather_store.effective_speed_restriction_kmph(cached["section"])
+        )
+    }
     if headway_minutes is not None:
         kwargs["headway_minutes"] = headway_minutes
 
     result = resolve_conflict(conflict, **kwargs)
+    options = result.get("options", [])
+    # Task 6.2: the deep optimizer produced nothing usable inside its
+    # budget (fail_safe with zero options) -- don't leave the controller
+    # with nothing actionable, append the instant rule-based fallback.
+    # `fail_safe`/`rejected` stay exactly as the deep tier returned them.
+    if result.get("fail_safe") and not options:
+        options = [fallback_resolution(conflict)]
     return ConflictOptionsResponse(
-        options=result.get("options", []),
+        options=options,
         rejected=result.get("rejected", []),
         proven_optimal=result.get("proven_optimal"),
         fail_safe=result.get("fail_safe"),
