@@ -123,3 +123,33 @@ export interface HealthStatus {
   ai_engine: 'up' | 'down';
   last_heartbeat?: string;
 }
+
+export interface EvaluationApproachMetrics {
+  downtime_minutes: number;
+  overdue_backlog_burndown_pct: number;
+  block_utilization_pct: number;
+  joint_block_rate_pct: number;
+  priority_score_coverage_pct: number;
+  unassigned_task_ids: string[];
+  [key: string]: unknown;
+}
+
+export interface EvaluationImprovementPct {
+  asset_downtime_reduction_pct: number;
+  overdue_backlog_burndown_pct: number;
+  block_utilization_efficiency_pct: number;
+  joint_block_rate_pct: number;
+  priority_score_coverage_pct: number;
+}
+
+export interface EvaluationMetrics {
+  seed: number;
+  task_count: number;
+  slot_count: number;
+  overdue_task_count: number;
+  generation_now: string;
+  evaluation_today: string;
+  baseline: EvaluationApproachMetrics;
+  ai_optimized: EvaluationApproachMetrics;
+  improvement_pct: EvaluationImprovementPct;
+}

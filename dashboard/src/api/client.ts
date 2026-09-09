@@ -7,6 +7,7 @@ import type {
   Defect,
   EmergencyTriggerPayload,
   EmergencyTriggerResult,
+  EvaluationMetrics,
   HealthStatus,
   MonthlyBlockPlan,
   NetworkState,
@@ -83,6 +84,38 @@ export async function triggerEmergency(
 export async function getHealth(): Promise<HealthStatus> {
   if (USE_MOCK_DATA) return MOCK_HEALTH;
   return request<HealthStatus>('/health');
+}
+
+const MOCK_EVALUATION_APPROACH = {
+  downtime_minutes: 0,
+  overdue_backlog_burndown_pct: 0,
+  block_utilization_pct: 0,
+  joint_block_rate_pct: 0,
+  priority_score_coverage_pct: 0,
+  unassigned_task_ids: [],
+};
+
+export async function getEvaluationMetrics(): Promise<EvaluationMetrics> {
+  if (USE_MOCK_DATA) {
+    return {
+      seed: 42,
+      task_count: 0,
+      slot_count: 0,
+      overdue_task_count: 0,
+      generation_now: new Date().toISOString(),
+      evaluation_today: new Date().toISOString().slice(0, 10),
+      baseline: MOCK_EVALUATION_APPROACH,
+      ai_optimized: MOCK_EVALUATION_APPROACH,
+      improvement_pct: {
+        asset_downtime_reduction_pct: 0,
+        overdue_backlog_burndown_pct: 0,
+        block_utilization_efficiency_pct: 0,
+        joint_block_rate_pct: 0,
+        priority_score_coverage_pct: 0,
+      },
+    };
+  }
+  return request<EvaluationMetrics>('/evaluation/blockplan');
 }
 
 // re-exported for callers that only need the plain slot type, not the

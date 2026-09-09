@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { ScrollSection } from '../components/ScrollSection';
 import { SideNav } from '../components/SideNav';
 import { useApiPoll } from '../api/useApiPoll';
-import { getDefects, getHealth, getWeeklyBlockPlan, getMonthlyBlockPlan } from '../api/client';
+import { getDefects, getEvaluationMetrics, getHealth, getWeeklyBlockPlan, getMonthlyBlockPlan } from '../api/client';
 import { POLL_INTERVAL_MS } from '../api/config';
+import type { EvaluationApproachMetrics } from '../api/types';
 
 const SECTIONS = [
   { id: 'hero', label: 'Overview' },
@@ -27,11 +28,16 @@ export function Feature5Page() {
   const { data: weekly, loading: weeklyLoading, error: weeklyError } = useApiPoll(getWeeklyBlockPlan, POLL_INTERVAL_MS);
   const { data: monthly, loading: monthlyLoading, error: monthlyError } = useApiPoll(getMonthlyBlockPlan, POLL_INTERVAL_MS);
   const { data: health, loading: healthLoading, error: healthError } = useApiPoll(getHealth, POLL_INTERVAL_MS);
+  const { data: evaluation, loading: evaluationLoading, error: evaluationError } = useApiPoll(getEvaluationMetrics, POLL_INTERVAL_MS);
 
   const rankedDefects = [...(defects ?? [])].sort((a, b) => b.priority_score - a.priority_score);
   const healthOk = !healthLoading && !healthError && health?.ai_engine === 'up';
 
   const [solverRun, setSolverRun] = useState(false);
+  const [evaluationView, setEvaluationView] = useState<'ai' | 'baseline'>('ai');
+  const activeEvaluationMetrics: EvaluationApproachMetrics | undefined = evaluation
+    ? evaluation[evaluationView === 'ai' ? 'ai_optimized' : 'baseline']
+    : undefined;
 
   return (
     <>
@@ -688,6 +694,61 @@ export function Feature5Page() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+              <div className="flex items-center justify-between flex-wrap gap-space-xs">
+                <div>
+                  <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Live from GET /evaluation/blockplan</span>
+                  <h3 className="font-headline-sm text-headline-sm text-on-surface">Before / After: AI-Optimized vs Baseline (Manual/Greedy)</h3>
+                </div>
+                <div className="inline-flex rounded-full bg-surface-container p-1 gap-1">
+                  <button
+                    onClick={() => setEvaluationView('baseline')}
+                    className={`px-space-sm py-space-xxs rounded-full font-label-mono text-label-mono font-bold uppercase transition-colors cursor-pointer ${evaluationView === 'baseline' ? 'bg-surface-container-high text-on-surface shadow-sm' : 'text-on-surface-variant'}`}
+                  >
+                    Baseline (Manual/Greedy)
+                  </button>
+                  <button
+                    onClick={() => setEvaluationView('ai')}
+                    className={`px-space-sm py-space-xxs rounded-full font-label-mono text-label-mono font-bold uppercase transition-colors cursor-pointer ${evaluationView === 'ai' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'}`}
+                  >
+                    AI-Optimized
+                  </button>
+                </div>
+              </div>
+              {evaluationLoading ? (
+                <div className="p-space-md rounded-lg bg-surface-container-low text-on-surface-variant font-body-sm text-body-sm">Loading evaluation metrics…</div>
+              ) : evaluationError ? (
+                <div className="p-space-md rounded-lg bg-error-container text-on-error-container font-body-sm text-body-sm">Evaluation feed unreachable: {evaluationError.message}</div>
+              ) : !evaluation || !activeEvaluationMetrics ? (
+                <div className="p-space-md rounded-lg bg-surface-container-low text-on-surface-variant font-body-sm text-body-sm">No evaluation metrics available yet.</div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-space-sm">
+                    {([
+                      { label: 'Asset Downtime', value: `${activeEvaluationMetrics.downtime_minutes.toFixed(0)} min`, improvement: evaluation.improvement_pct.asset_downtime_reduction_pct },
+                      { label: 'Overdue Burn-down', value: `${activeEvaluationMetrics.overdue_backlog_burndown_pct.toFixed(1)}%`, improvement: evaluation.improvement_pct.overdue_backlog_burndown_pct },
+                      { label: 'Block Utilization', value: `${activeEvaluationMetrics.block_utilization_pct.toFixed(1)}%`, improvement: evaluation.improvement_pct.block_utilization_efficiency_pct },
+                      { label: 'Joint-Block Rate', value: `${activeEvaluationMetrics.joint_block_rate_pct.toFixed(1)}%`, improvement: evaluation.improvement_pct.joint_block_rate_pct },
+                      { label: 'Priority-Score Coverage', value: `${activeEvaluationMetrics.priority_score_coverage_pct.toFixed(1)}%`, improvement: evaluation.improvement_pct.priority_score_coverage_pct },
+                    ] as const).map((m) => (
+                      <div key={m.label} className="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-space-xxs">
+                        <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">{m.label}</span>
+                        <span className="font-headline-sm text-headline-sm text-on-surface font-bold">{m.value}</span>
+                        {evaluationView === 'ai' && (
+                          <span className={`font-label-mono text-label-mono font-bold ${m.improvement >= 0 ? 'text-secondary' : 'text-error'}`}>
+                            {m.improvement >= 0 ? '+' : ''}{m.improvement.toFixed(1)}% vs baseline
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <span className="font-label-mono text-[10px] text-on-surface-variant italic">
+                    Seed {evaluation.seed} • {evaluation.task_count} tasks • {evaluation.slot_count} slots • {evaluation.overdue_task_count} overdue as of {evaluation.evaluation_today} — {evaluationView === 'ai' ? 'plan_tasks() joint-block CP-SAT solve' : 'FIFO-by-reported-date greedy allocator, one task per slot, no ML scoring'}.
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </ScrollSection>

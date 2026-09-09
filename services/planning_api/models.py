@@ -156,6 +156,39 @@ class ServiceHealthEntry(BaseModel):
     last_heartbeat: Optional[str] = None
 
 
+class EvaluationApproachMetrics(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    downtime_minutes: float
+    overdue_backlog_burndown_pct: float
+    block_utilization_pct: float
+    joint_block_rate_pct: float
+    priority_score_coverage_pct: float
+    unassigned_task_ids: list[str]
+
+
+class EvaluationImprovementPct(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    asset_downtime_reduction_pct: float
+    overdue_backlog_burndown_pct: float
+    block_utilization_efficiency_pct: float
+    joint_block_rate_pct: float
+    priority_score_coverage_pct: float
+
+
+class EvaluationMetricsResponse(BaseModel):
+    seed: int
+    task_count: int
+    slot_count: int
+    overdue_task_count: int
+    generation_now: str
+    evaluation_today: str
+    baseline: EvaluationApproachMetrics
+    ai_optimized: EvaluationApproachMetrics
+    improvement_pct: EvaluationImprovementPct
+
+
 class HealthResponse(BaseModel):
     ai_engine: Literal["up", "down"]
     last_heartbeat: Optional[str] = None

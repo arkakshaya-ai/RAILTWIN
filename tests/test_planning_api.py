@@ -129,6 +129,25 @@ class TestBlockPlan:
         assert len(body["slots"]) > 0
 
 
+class TestEvaluation:
+    def test_evaluation_blockplan_returns_baseline_and_ai_metrics(self, client):
+        response = client.get("/api/v1/evaluation/blockplan")
+        assert response.status_code == 200
+        body = response.json()
+        assert set(["baseline", "ai_optimized", "improvement_pct"]).issubset(body.keys())
+        for section in ("baseline", "ai_optimized"):
+            assert set(
+                [
+                    "downtime_minutes",
+                    "overdue_backlog_burndown_pct",
+                    "block_utilization_pct",
+                    "joint_block_rate_pct",
+                    "priority_score_coverage_pct",
+                ]
+            ).issubset(body[section].keys())
+        assert body["ai_optimized"]["joint_block_rate_pct"] >= body["baseline"]["joint_block_rate_pct"]
+
+
 class TestEmergencyTrigger:
     def test_emergency_trigger_returns_contract_stub(self, client):
         response = client.post("/api/v1/emergency/trigger", json={"section": "SEC-B", "reason": "signal failure"})

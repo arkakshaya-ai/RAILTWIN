@@ -27,7 +27,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from services.planning_api import health as health_module
 from services.planning_api.demo_data import SEED_DEMO_DATA, seed_demo_digital_twin_state
 from services.planning_api.deps import get_engine
-from services.planning_api.routers import blockplan, conflicts, defects, emergency, health, network
+from services.planning_api.routers import blockplan, conflicts, defects, emergency, evaluation, health, network
 from services.scheduling.jobs import start_scheduler
 
 logger = logging.getLogger(__name__)
@@ -88,4 +88,5 @@ app.include_router(conflicts.router, prefix="/api/v1", tags=["conflicts"])
 app.include_router(defects.router, prefix="/api/v1", tags=["defects"])
 app.include_router(blockplan.router, prefix="/api/v1", tags=["blockplan"])
 app.include_router(emergency.router, prefix="/api/v1", tags=["emergency"])
+app.include_router(evaluation.router, prefix="/api/v1", tags=["evaluation"])
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
